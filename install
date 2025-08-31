@@ -1,0 +1,91 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# nvimv installer script
+# Downloads and installs nvimv to ~/.local/bin/ (configurable)
+
+# Configuration
+INSTALL_DIR="${NVIMV_INSTALL_DIR:-${PREFIX:-$HOME/.local}/bin}"
+REPO_URL="https://raw.githubusercontent.com/jrop/nvimv/main/nvimv"
+
+check_dependencies() {
+	local missing_deps=()
+
+	if ! command -v curl >/dev/null 2>&1; then
+		missing_deps+=("curl")
+	fi
+
+	if ! command -v jq >/dev/null 2>&1; then
+		missing_deps+=("jq")
+	fi
+
+	if [ ${#missing_deps[@]} -ne 0 ]; then
+		echo "Missing required dependencies: ${missing_deps[*]}"
+		echo "Please install them and try again."
+		exit 1
+	fi
+}
+
+main() {
+	echo "Installing nvimv..."
+
+	# Check dependencies
+	check_dependencies
+
+	if [ ! -d "$INSTALL_DIR" ]; then
+		echo "Creating install directory: $INSTALL_DIR"
+		mkdir -p "$INSTALL_DIR"
+	fi
+
+	# Download nvimv
+	echo "Downloading nvimv from $REPO_URL"
+	if curl -fsSL "$REPO_URL" -o "$INSTALL_DIR/nvimv"; then
+		echo "Downloaded nvimv to $INSTALL_DIR/nvimv"
+	else
+		echo "Failed to download nvimv"
+		exit 1
+	fi
+
+	# Make executable
+	chmod +x "$INSTALL_DIR/nvimv"
+	echo "Made nvimv executable"
+
+	# Check if install directory is in PATH
+	if [[ ":$PATH:" != *":$INSTALL_DIR:"* ]]; then
+		echo "Install directory $INSTALL_DIR is not in your PATH"
+		echo "Add this to your shell profile (.bashrc, .zshrc, etc.):"
+		echo "    export PATH=\"$INSTALL_DIR:\$PATH\""
+	fi
+
+	echo "✅ nvimv installed successfully!"
+	echo "Run 'nvimv --help' to get started"
+}
+
+# Show help
+if [[ "${1:-}" == "--help" ]] || [[ "${1:-}" == "-h" ]]; then
+	cat <<EOF
+nvimv installer
+
+Usage: $0 [options]
+
+Options:
+  -h, --help    Show this help message
+
+Environment variables:
+  NVIMV_INSTALL_DIR    Installation directory (default: ~/.local/bin)
+  PREFIX               Alternative prefix (default: ~/.local)
+
+Examples:
+  # Install to default location
+  $0
+
+  # Install to custom directory
+  NVIMV_INSTALL_DIR=/usr/local/bin $0
+
+  # Install with custom prefix
+  PREFIX=/opt/local $0
+EOF
+	exit 0
+fi
+
+main "$@"
