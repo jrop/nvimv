@@ -17,6 +17,7 @@ Easily install, manage, and switch between different versions of Neovim without 
 
 - 🔄 **Switch versions instantly** - Jump between Neovim versions with a single command
 - 📦 **Auto-download & install** - Fetches official releases directly from GitHub
+- 🏗️ **Build from source** - Install specific commits, branches, or tags from git
 - 🏗️ **Cross-platform** - Works on Linux and macOS (Intel & Apple Silicon)
 - 🎯 **Zero configuration** - Works out of the box with sensible defaults
 - 🧹 **Clean management** - Easy installation, upgrade, and removal
@@ -56,6 +57,24 @@ nvim --version
 nvimv install nightly
 nvimv exec nightly  # Test without switching your default
 ```
+
+### Build from source (git refs)
+
+```bash
+# Install from a specific commit
+nvimv install git_abc1234
+
+# Install from a branch
+nvimv install git_master
+
+# Install from a tag
+nvimv install git_v0.10.0
+
+# Use a git build
+nvimv use git_master
+```
+
+**Note:** Git refs are built from source and cannot be upgraded. Use `remove` then `install` to update them.
 
 ### One-off commands for specific versions
 
@@ -100,7 +119,7 @@ PREFIX=/opt/local curl -fsSL https://raw.githubusercontent.com/jrop/nvimv/main/i
 2. Make it executable: `chmod +x nvimv`
 3. Put it in your PATH (e.g., `mv nvimv ~/.local/bin/`)
 
-**Dependencies:** `curl`, `jq`
+**Dependencies:** `curl`, `jq`, `git`, `make`, `cmake` (git refs only)
 
 ## 📄 License (MIT)
 
