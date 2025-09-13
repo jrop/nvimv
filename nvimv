@@ -85,7 +85,6 @@ _download_tag() {
 		# Build neovim
 		make CMAKE_BUILD_TYPE=Release
 
-
 		cd - >/dev/null
 		return
 		;;
