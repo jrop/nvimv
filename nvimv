@@ -138,6 +138,9 @@ _download_tag() {
 }
 
 list_local() {
+	if [ ! -d "$DATA_DIR/tags" ]; then
+		return
+	fi
 	find "$DATA_DIR/tags" -mindepth 1 -maxdepth 1 -type d | xargs -n 1 basename
 }
 
