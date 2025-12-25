@@ -34,6 +34,10 @@ PREFIX="${PREFIX:-$HOME/.local}"
 INSTALL_DIR="$PREFIX/bin"
 DATA_DIR="${XDG_DATA_HOME:-$PREFIX/share}/nvimv"
 
+mkdir -p "$PREFIX"
+mkdir -p "$INSTALL_DIR"
+mkdir -p "$DATA_DIR"
+
 _print_env() {
 	tag=$1
 	tag=$(echo "$tag" | sed 's/^v//')
