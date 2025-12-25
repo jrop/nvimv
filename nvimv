@@ -157,7 +157,7 @@ install_tag() {
 	tag=$(echo "$tag" | sed 's/^v//')
 	if list_local | grep -F "$tag" >/dev/null; then
 		echo "'$tag' is already installed"
-		exit 1
+		exit 0
 	fi
 	_download_tag "$tag"
 }
