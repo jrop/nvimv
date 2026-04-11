@@ -1,0 +1,7 @@
+[tools]
+shfmt = "3.13.1"
+prettier = "3.6.2"
+
+[tasks]
+"fmt:check" = "prettier --check '*.md' && shfmt --diff nvimv install"
+"fmt" = "prettier --write '*.md' && shfmt --write nvimv install"
