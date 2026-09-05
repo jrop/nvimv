@@ -33,6 +33,7 @@ EOF
 PREFIX="${PREFIX:-$HOME/.local}"
 INSTALL_DIR="$PREFIX/bin"
 DATA_DIR="${XDG_DATA_HOME:-$PREFIX/share}/nvimv"
+MISE_VERSION="2026.9.1"
 
 mkdir -p "$PREFIX"
 mkdir -p "$INSTALL_DIR"
@@ -68,6 +69,35 @@ exec nvim "\$@"
 EOF
 }
 
+_print_build_mise() {
+	cat <<EOF
+[tools]
+clang = "23.1.0"
+cmake = "4.4.3"
+make = { version = "4.4.1", os = ["linux"] }
+ninja = "1.13.2"
+
+[bootstrap.packages]
+"brew:make" = "latest"
+EOF
+}
+
+_install_mise() {
+	curl https://mise.run | MISE_INSTALL_PATH="$DATA_DIR/mise" MISE_VERSION="v$MISE_VERSION" sh
+}
+
+_ensure_mise() {
+	if [[ ! -f "$DATA_DIR/mise" ]]; then
+		_install_mise
+		return
+	fi
+	v="$("$DATA_DIR/mise" version -J | jq -r .version | sed 's/^\([0-9.]\+\).*$/\1/')"
+	if [[ "$v" != "$MISE_VERSION" ]]; then
+		_install_mise
+		return
+	fi
+}
+
 _download_tag() {
 	tag="$1"
 
@@ -77,14 +107,24 @@ _download_tag() {
 		commit_ish="${tag#git_}"
 		base_dir="$DATA_DIR/tags/$tag"
 
-		# Clone the repo if it doesn't exist, otherwise fetch
+		# Blobless partial clone: full history but no file-contents (blobs) yet.
+		# This let's the git checkout $commit_ish work seemlessly later.
 		if [ ! -d "$base_dir" ]; then
-			git clone https://github.com/neovim/neovim.git "$base_dir"
+			git clone --filter=blob:none https://github.com/neovim/neovim.git "$base_dir"
 		fi
-
 		cd "$base_dir"
 		git fetch
 		git checkout "$commit_ish"
+
+		_ensure_mise
+		_print_build_mise > mise.toml
+		eval "$("$DATA_DIR/mise" activate bash)"
+		case $(uname -s) in
+		Darwin)
+			mise bootstrap packages apply -y
+			;;
+		esac
+		mise install
 
 		# Build neovim
 		make CMAKE_BUILD_TYPE=Release
@@ -128,7 +168,7 @@ _download_tag() {
 		# Download and extract:
 		base_dir="$DATA_DIR/tags/$tag"
 		tar_name="$(echo "$asset" | jq -r '.name')"
-		mkdir -p "$base_dir"
+		rm -rf "$base_dir" && mkdir -p "$base_dir"
 		cd "$base_dir"
 		curl -LO "$(echo "$asset" | jq -r '.browser_download_url')"
 
